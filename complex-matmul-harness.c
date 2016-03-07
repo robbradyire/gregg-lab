@@ -133,7 +133,6 @@ void matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a
 {
   int i, j, k;
 
-  #pragma omp parallel for
   for ( i = 0; i < a_dim1; i++ ) {
     for( j = 0; j < b_dim2; j++ ) {
       struct complex sum;
@@ -141,14 +140,9 @@ void matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a
       sum.imag = 0.0;
       for ( k = 0; k < a_dim2; k++ ) {
         // the following code does: sum += A[i][k] * B[k][j];
-        float aReal, bReal, aImag, bImag;
         struct complex product;
-        aReal = A[i][k].real;
-        bReal = B[k][j].real;
-        aImag = A[i][k].imag;
-        bImag = B[k][j].imag;
-        product.real = aReal * bReal - aImag * bImag;
-        product.imag = aReal * bImag + aImag * bReal;
+        product.real = A[i][k].real * B[k][j].real - A[i][k].imag * B[k][j].imag;
+        product.imag = A[i][k].real * B[k][j].imag + A[i][k].imag * B[k][j].real;
         sum.real += product.real;
         sum.imag += product.imag;
       }
@@ -159,8 +153,27 @@ void matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a
 
 /* the fast version of matmul written by the team */
 void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a_rows, int a_cols, int b_cols) {
-  //replace this
-  matmul(A, B, C, a_rows, a_cols, b_cols);
+  int i, j, k;
+
+  #pragma omp parallel for
+  for ( i = 0; i < a_rows; i++ ) {
+    for( j = 0; j < b_cols; j++ ) {
+      struct complex sum;
+      sum.real = 0.0;
+      sum.imag = 0.0;
+      for ( k = 0; k < a_cols; k++ ) {
+        // the following code does: sum += A[i][k] * B[k][j];
+        float aReal, bReal, aImag, bImag;
+        aReal = A[i][k].real;
+        bReal = B[k][j].real;
+        aImag = A[i][k].imag;
+        bImag = B[k][j].imag;
+        sum.real += aReal * bReal - aImag * bImag;
+        sum.imag += aReal * bImag + aImag * bReal;
+      }
+      C[i][j] = sum;
+    }
+  }
 }
 
 long long time_diff(struct timeval * start, struct timeval * end) {
