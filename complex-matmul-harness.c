@@ -192,7 +192,7 @@ void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, 
         __m128 realFourc = _mm_load_ps(&realSums[k+8]);
         __m128 realFourd = _mm_load_ps(&realSums[k+12]);
         __m128 realSumb = _mm_hadd_ps (realFourc, realFourd);
-        realSum = _mm_hadd_ps (realSuma, realSumb);
+        realSuma = _mm_hadd_ps (realSuma, realSumb);
 
         __m128 imagFoura = _mm_load_ps(&imagSums[k]);
         __m128 imagFourb = _mm_load_ps(&imagSums[k+4]);
@@ -200,9 +200,9 @@ void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, 
         __m128 imagFourc = _mm_load_ps(&imagSums[k+8]);
         __m128 imagFourd = _mm_load_ps(&imagSums[k+12]);
         __m128 imagSumb = _mm_hadd_ps (imagFourc, imagFourd);
-        imagSum = _mm_hadd_ps (imagSuma, imagSumb);
+        imagSuma = _mm_hadd_ps (imagSuma, imagSumb);
 
-        __m128 allSum = _mm_hadd_ps (realSum, imagSum);
+        __m128 allSum = _mm_hadd_ps (realSuma, imagSuma);
 
         _mm_store_ps (result, allSum);
         sum.real += result[0] + result[1];
