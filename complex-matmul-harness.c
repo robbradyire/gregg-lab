@@ -160,6 +160,7 @@ void matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a
 void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a_rows, int a_cols, int b_cols) {
   int i, j, k;
 
+  #pragma omp parallel for schedule(dynamic)
   for ( i = 0; i < a_rows; i++ ) {
     for( j = 0; j < b_cols; j++ ) {
       struct complex sum;
