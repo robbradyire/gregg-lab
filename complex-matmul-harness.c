@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <assert.h>
 #include <omp.h>
+#include <xmmintrin.h>
 
 
 
@@ -151,6 +152,10 @@ void matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a
   }
 }
 
+// 500 ~ 13x
+// 90  ~ .7x
+// 1000 ~ 15.9x
+
 /* the fast version of matmul written by the team */
 void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a_rows, int a_cols, int b_cols) {
   int i, j, k;
@@ -160,15 +165,44 @@ void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, 
       struct complex sum;
       sum.real = 0.0;
       sum.imag = 0.0;
+      float[] realSums = float[a_cols];
+      float[] imagSums = float[a_cols];
+      
+      #pragma omp parallel for schedule(dynamic)
       for ( k = 0; k < a_cols; k++ ) {
         // the following code does: sum += A[i][k] * B[k][j];
         float aReal = A[i][k].real;
         float aImag = A[i][k].imag;
         float bReal = B[k][j].real;
         float bImag = B[k][j].imag;
-        sum.real += aReal * bReal - aImag * bImag;
-        sum.imag += aReal * bImag + aImag * bReal;
+        realSums[k] = aReal * bReal - aImag * bImag;
+        imagSums[k] = aReal * bImag + aImag * bReal;
       }
+
+      for( k = 0; k < a_cols%8; k++ ) {
+        sum.real += realSums[k]; 
+        sum.imag += imagSums[k];
+      }
+
+      float result [4];
+      for( k = a_cols%8; k < a_cols; k+=8) {
+        __m128 realFoura = _mm_load_ps(&realSums[k]);
+        __m128 realFourb = _mm_load_ps(&realSums[k+4]);
+        __m128 realSum = _mm_hadd_ps (realFoura, realFourb);
+        realSum = _mm_hadd_ps (realSum, realSum);
+
+        __m128 imagFoura = _mm_load_ps(&imagSums[k]);
+        __m128 imagFourb = _mm_load_ps(&imagSums[k+4]);
+        __m128 imagSum = _mm_hadd_ps (imagFoura, imagFourb);
+        imagSum = _mm_hadd_ps (imagSum, imagSum);
+
+        __m128 allSum = _mm_hadd_ps (realSum, imagSum);
+        
+        _mm_store_ps (result, allSum);
+        sum.real += result[0];
+        sum.imag += result[2];
+      }
+
       C[i][j] = sum;
     }
   }
