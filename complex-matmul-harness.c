@@ -6,7 +6,7 @@
 #include <sys/time.h>
 #include <assert.h>
 #include <omp.h>
-#include <xmmintrin.h>
+#include <x86intrin.h>
 
 
 
