@@ -174,38 +174,8 @@ void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, 
         float aImag = A[i][k].imag;
         float bReal = B[k][j].real;
         float bImag = B[k][j].imag;
-        realSums[k] = aReal * bReal - aImag * bImag;
-        imagSums[k] = aReal * bImag + aImag * bReal;
-
-        if( k%16 == 0 ) {
-          __m128 realFoura = _mm_load_ps(&realSums[k]);
-          __m128 realFourb = _mm_load_ps(&realSums[k+4]);
-          __m128 realSuma = _mm_hadd_ps (realFoura, realFourb);
-          __m128 realFourc = _mm_load_ps(&realSums[k+8]);
-          __m128 realFourd = _mm_load_ps(&realSums[k+12]);
-          __m128 realSumb = _mm_hadd_ps (realFourc, realFourd);
-          realSuma = _mm_hadd_ps (realSuma, realSumb);
-
-          __m128 imagFoura = _mm_load_ps(&imagSums[k]);
-          __m128 imagFourb = _mm_load_ps(&imagSums[k+4]);
-          __m128 imagSuma = _mm_hadd_ps (imagFoura, imagFourb);
-          __m128 imagFourc = _mm_load_ps(&imagSums[k+8]);
-          __m128 imagFourd = _mm_load_ps(&imagSums[k+12]);
-          __m128 imagSumb = _mm_hadd_ps (imagFourc, imagFourd);
-          imagSuma = _mm_hadd_ps (imagSuma, imagSumb);
-
-          __m128 allSum = _mm_hadd_ps (realSuma, imagSuma);
-
-          float result [4];
-          _mm_store_ps (result, allSum);
-          sum.real += (result[0] + result[1]);
-          sum.imag += (result[2] + result[3]);
-        }
-      }
-
-      for( k = k - k%16; k < a_cols; k++ ) {
-        sum.real += realSums[k]; 
-        sum.imag += imagSums[k];
+        sum.real += aReal * bReal - aImag * bImag;
+        sum.imag += aReal * bImag + aImag * bReal;
       }
 
       C[i][j] = sum;
