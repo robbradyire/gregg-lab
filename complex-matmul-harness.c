@@ -154,8 +154,7 @@ void matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a
 /* the fast version of matmul written by the team */
 void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a_rows, int a_cols, int b_cols) {
   int i, j, k;
-
-  #pragma omp parallel for
+  #pragma omp parallel for schedule(dynamic)
   for ( i = 0; i < a_rows; i++ ) {
     for( j = 0; j < b_cols; j++ ) {
       struct complex sum;
@@ -163,11 +162,10 @@ void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, 
       sum.imag = 0.0;
       for ( k = 0; k < a_cols; k++ ) {
         // the following code does: sum += A[i][k] * B[k][j];
-        float aReal, bReal, aImag, bImag;
-        aReal = A[i][k].real;
-        bReal = B[k][j].real;
-        aImag = A[i][k].imag;
-        bImag = B[k][j].imag;
+        float aReal = A[i][k].real;
+        float aImag = A[i][k].imag;
+        float bReal = B[k][j].real;
+        float bImag = B[k][j].imag;
         sum.real += aReal * bReal - aImag * bImag;
         sum.imag += aReal * bImag + aImag * bReal;
       }
