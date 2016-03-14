@@ -160,6 +160,17 @@ void matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a
 void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, int a_rows, int a_cols, int b_cols) {
   int i, j, k;
 
+  struct complex temp [a_cols][b_rows];
+
+  #pragma omp parallel for schedule(dynamic)
+  for ( i = 0; i < a_cols; i++ ) {
+    for( j = 0; j < b_cols; j++ ) {
+      temp[i][j] = B[a_cols-i][b_cols-j];
+    }
+  }
+
+  B = temp;
+
   #pragma omp parallel for schedule(dynamic)
   for ( i = 0; i < a_rows; i++ ) {
     for( j = 0; j < b_cols; j++ ) {
