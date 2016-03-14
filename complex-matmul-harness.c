@@ -196,9 +196,10 @@ void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, 
 
           __m128 allSum = _mm_hadd_ps (realSuma, imagSuma);
 
+          float result [4];
           _mm_store_ps (result, allSum);
-          sum.real += result[0] + result[1];
-          sum.imag += result[2] + result[3];
+          sum.real += (result[0] + result[1]);
+          sum.imag += (result[2] + result[3]);
         }
       }
 
@@ -206,9 +207,6 @@ void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, 
         sum.real += realSums[k]; 
         sum.imag += imagSums[k];
       }
-
-      float result [4];
-      
 
       C[i][j] = sum;
     }
