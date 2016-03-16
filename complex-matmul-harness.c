@@ -163,27 +163,28 @@ void team_matmul(struct complex ** A, struct complex ** B, struct complex ** C, 
   struct complex tB [a_cols][b_cols];
 
   #pragma omp parallel for schedule(dynamic)
-  for ( i = 0; i < a_cols; i++ ) {
-    for( j = 0; j < b_cols; j++ ) {
+  for (i = 0; i < a_cols; i++) {
+    for(j = 0; j < b_cols; j++) {
       struct complex temp;
       tB[i][j] = B[j][i];
     }
   }
 
   #pragma omp parallel for schedule(dynamic)
-  for ( i = 0; i < a_rows; i++ ) {
-    for( j = 0; j < b_cols; j++ ) {
+  for (i = 0; i < a_rows; i++) {
+    for(j = 0; j < b_cols; j++) {
       struct complex sum;
       sum.real = 0.0;
       sum.imag = 0.0;
-      for ( k = 0; k < a_cols; k++ ) {
+      float aReal, aImag, bReal, bImag;
+      for (k = 0; k < a_cols; k++) {
         // the following code does: sum += A[i][k] * B[k][j];
-        float aReal = A[i][k].real;
-        float aImag = A[i][k].imag;
-        float bReal = tB[j][k].real;
-        float bImag = tB[j][k].imag;
-        sum.real += (aReal * bReal - aImag * bImag);
-        sum.imag += (aReal * bImag + aImag * bReal);
+        aReal = A[i][k].real;
+        aImag = A[i][k].imag;
+        bReal = tB[j][k].real;
+        bImag = tB[j][k].imag;
+        sum.real += aReal * bReal - aImag * bImag;
+        sum.imag += aReal * bImag + aImag * bReal;
       }
       C[i][j] = sum;
     }
